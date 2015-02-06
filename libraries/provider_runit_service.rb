@@ -93,18 +93,20 @@ class Chef
             Chef::Log.info("#{@new_resource} configured")
           end
           if @current_resource.enabled
+            just_enabled = false
             Chef::Log.debug("#{@new_resource} already enabled - nothing to do")
           else
             converge_by("enable service #{@new_resource}") do
               enable_service
+              just_enabled = true
               Chef::Log.info("#{@new_resource} enabled")
             end
           end
           load_new_resource_state
           @new_resource.enabled(true)
-          restart_service if @new_resource.restart_on_update && run_script.updated_by_last_action?
-          restart_log_service if @new_resource.restart_on_update && log_run_script.updated_by_last_action?
-          restart_log_service if @new_resource.restart_on_update && log_config_file.updated_by_last_action?
+          restart_service if @new_resource.restart_on_update && run_script.updated_by_last_action? && !just_enabled
+          restart_log_service if @new_resource.restart_on_update && log_run_script.updated_by_last_action? && !just_enabled
+          restart_log_service if @new_resource.restart_on_update && log_config_file.updated_by_last_action? && !just_enabled
         end
 
         def configure_service
